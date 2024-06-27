@@ -19,8 +19,10 @@ class Main {
     });
 
     this.renderer.setSize(800, 600);
-    this.renderer.setClearColor(0x000000);
+    this.renderer.setClearColor(0x00000); // Change background color for better visibility
     this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optionally change shadow map type for better quality
+
 
 
 
@@ -32,13 +34,25 @@ class Main {
 
     plane.rotation.x = -Math.PI / 2;
     plane.receiveShadow = true;
-    plane.castShadow = true;
     this.scene.add(plane);
 
     // Directional lighting
     var directionalLight = new THREE.DirectionalLight(0xffffff);
     directionalLight.castShadow = true;
     directionalLight.position.set(3, 10, 10);
+
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.camera.left = -20;
+    directionalLight.shadow.camera.right = 20;
+    directionalLight.shadow.camera.top = 20;
+    directionalLight.shadow.camera.bottom = -20;
+    directionalLight.shadow.bias = -0.01;
+
+    var directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight);
+    this.scene.add(directionalLightHelper);
     this.scene.add(directionalLight);
 
     var thirdPerson = new ThirdPersonCamera(

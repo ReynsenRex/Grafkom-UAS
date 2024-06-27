@@ -30,7 +30,6 @@ export class Player {
             this.mesh.rotation.y = Math.PI / 2;
             this.targetRotation.y = Math.PI / 2;
 
-
             this.mixer = new THREE.AnimationMixer(this.mesh);
             var onLoad = (animName, anim) => {
                 var clip = anim.animations[0];
@@ -53,30 +52,19 @@ export class Player {
         if (!this.mesh) return;
 
         var direction = new THREE.Vector3(0, 0, 0);
+        var moveSpeed = 10;
+
         if (this.controller.key['forward']) {
-            direction.x = 1;
-            this.mesh.rotation.y = Math.PI / 2;
-            this.targetRotation.y = Math.PI / 2;
+            direction.x += 1;
         }
         if (this.controller.key['backward']) {
-            direction.x = -1;
-            this.mesh.rotation.y = -Math.PI / 2;
-            this.targetRotation.y = -Math.PI / 2;
-
+            direction.x -= 1;
         }
         if (this.controller.key['left']) {
-            direction.z = -1;
-            this.mesh.rotation.y = Math.PI;
-            this.targetRotation.y = Math.PI;
-
-
+            direction.z -= 1;
         }
         if (this.controller.key['right']) {
-            direction.z = 1;
-            this.mesh.rotation.y = 0;
-            this.targetRotation.y = 0;
-
-
+            direction.z += 1;
         }
 
         if (direction.length() === 0) {
@@ -98,9 +86,21 @@ export class Player {
                 this.mixer.update(dt);
             }
 
-            // Normalize the direction vector to ensure consistent movement speed in all directions
             direction.normalize();
-            this.mesh.position.add(direction.multiplyScalar(dt * 10));
+            direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.camera.rotationAngle.y); // Apply camera rotation to direction
+            
+            if (this.camera.shiftLock) {
+                // In shift lock mode, rotate the player within the view without changing its position
+                if (direction.length() > 0) {
+                    this.targetRotation.y = Math.atan2(direction.x, direction.z);
+                }
+            } else {
+                // Normal movement
+                this.mesh.position.add(direction.multiplyScalar(dt * moveSpeed));
+                if (direction.length() > 0) {
+                    this.targetRotation.y = Math.atan2(direction.x, direction.z);
+                }
+            }
         }
 
         // Smooth rotation
@@ -109,6 +109,7 @@ export class Player {
         // Update camera rotation
         this.camera.updateRotation(this.controller, dt);
 
+        // Update camera position
         this.camera.setup(this.mesh.position, this.rotationVector);
     }
 }
@@ -123,7 +124,10 @@ export class PlayerController {
             "rotateUp": false,
             "rotateDown": false,
             "rotateLeft": false,
-            "rotateRight": false
+            "rotateRight": false,
+            "zoom": 0,
+            "toggleCamera": false,
+            "shiftLock": false // Add shift lock key
         };
         this.mousePos = new THREE.Vector2();
         this.mouseDown = false;
@@ -132,28 +136,32 @@ export class PlayerController {
         document.addEventListener("keydown", (e) => this.onKeyDown(e), false);
         document.addEventListener("keyup", (e) => this.onKeyUp(e), false);
 
-        document.addEventListener("mousemove", (e) => this.onMouseMove(e), false)
-        document.addEventListener("mousedown", (e) => this.onMouseDown(e), false)
-        document.addEventListener("mouseup", (e) => this.onMouseUp(e), false)
+        document.addEventListener("mousemove", (e) => this.onMouseMove(e), false);
+        document.addEventListener("mousedown", (e) => this.onMouseDown(e), false);
+        document.addEventListener("mouseup", (e) => this.onMouseUp(e), false);
+        document.addEventListener("wheel", (e) => this.onMouseWheel(e), false);
     }
 
-    // onMouseDown(event) {
-    //     this.mouseDown = true;
-    // }
+    onMouseWheel(event) {
+        const zoomSpeed = 0.001;
+        this.key["zoom"] += event.deltaY * zoomSpeed;
+    }
 
-    // onMouseUp(event) {
-    //     this.mouseDown = false;
-    // }
+    onMouseMove(event) {
+        if (this.mouseDown) {
+            this.deltaMousePos.x = event.movementX;
+            this.deltaMousePos.y = event.movementY;
+        }
+    }
 
-    // onMouseMove(event) {
-    //     var currentMousePos = new THREE.Vector2(
-    //         (event.clientX / window.innerWidth) * 2 - 1,
-    //         -(event.clientY / window.innerHeight) * 2 + 1
-    //     );
+    onMouseDown(event) {
+        this.mouseDown = true;
+    }
 
-    //     this.deltaMousePos.addVectors(currentMousePos, this.mousePos.multiplyScalar(-1));
-    //     this.mousePos.copy(currentMousePos);
-    // }
+    onMouseUp(event) {
+        this.mouseDown = false;
+        this.deltaMousePos.set(0, 0);
+    }
 
     onKeyDown(event) {
         switch (event.key) {
@@ -173,6 +181,10 @@ export class PlayerController {
             case "j": this.key["rotateLeft"] = true; break;
             case "L":
             case "l": this.key["rotateRight"] = true; break;
+            case "C":
+            case "c": this.key["toggleCamera"] = !this.key["toggleCamera"]; break;
+            case "Shift":
+            case "shift": this.key["shiftLock"] = !this.key["shiftLock"]; break; // Toggle shift lock
         }
     }
 
@@ -204,6 +216,10 @@ export class ThirdPersonCamera {
         this.positionOffset = positionOffset;
         this.targetOffset = targetOffset;
         this.rotationAngle = new THREE.Vector2(0, 0);
+        this.zoomLevel = 1;
+        this.targetZoomLevel = 1;
+        this.isFirstPerson = false; // Add flag for first-person view
+        this.shiftLock = false; // Add flag for shift lock view
     }
 
     updateRotation(controller, dt) {
@@ -224,18 +240,58 @@ export class ThirdPersonCamera {
 
         // Clamp the x rotation to avoid flipping the camera
         this.rotationAngle.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotationAngle.x));
+
+        // Adjust target zoom level
+        if (controller.key["zoom"]) {
+            this.targetZoomLevel += controller.key["zoom"];
+            this.targetZoomLevel = Math.max(0.1, Math.min(10, this.targetZoomLevel));
+            controller.key["zoom"] = 0; // Reset zoom input
+        }
+
+        // Smooth zoom transition
+        this.zoomLevel = THREE.MathUtils.lerp(this.zoomLevel, this.targetZoomLevel, 0.1);
+
+        // Toggle camera view
+        if (controller.key["toggleCamera"]) {
+            this.isFirstPerson = !this.isFirstPerson;
+            controller.key["toggleCamera"] = false; // Reset toggle input
+        }
+
+        // Toggle shift lock view
+        if (controller.key["shiftLock"]) {
+            this.shiftLock = !this.shiftLock;
+            controller.key["shiftLock"] = false; // Reset shift lock input
+        }
     }
 
     setup(target, angle) {
-        var temp = new THREE.Vector3();
-        temp.copy(this.positionOffset);
-        temp.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle.y + this.rotationAngle.y);
-        temp.applyAxisAngle(new THREE.Vector3(1, 0, 0), angle.x + this.rotationAngle.x);
-        temp.addVectors(target, temp);
-        this.camera.position.copy(temp);
+        if (this.isFirstPerson) {
+            this.camera.position.copy(target).add(new THREE.Vector3(0, 1.7, 0));
+            this.camera.rotation.setFromVector3(angle);
+            document.body.requestPointerLock();
 
-        temp = new THREE.Vector3();
-        temp.addVectors(target, this.targetOffset);
-        this.camera.lookAt(temp);
+        } else if (this.shiftLock) {
+            // Shift lock camera setup
+            this.camera.position.copy(target).add(new THREE.Vector3(0, 1.7, -3));
+            this.camera.lookAt(target);
+            document.body.requestPointerLock();
+
+        } else {
+            var temp = new THREE.Vector3();
+            temp.copy(this.positionOffset);
+            temp.multiplyScalar(this.zoomLevel);
+            temp.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle.y + this.rotationAngle.y);
+            temp.applyAxisAngle(new THREE.Vector3(1, 0, 0), angle.x + this.rotationAngle.x);
+            temp.addVectors(target, temp);
+            this.camera.position.copy(temp);
+
+            temp = new THREE.Vector3();
+            temp.addVectors(target, this.targetOffset);
+            this.camera.lookAt(temp);
+
+            if (document.pointerLockElement === document.body) {
+                document.exitPointerLock();
+            }
+        }
     }
 }
