@@ -25,9 +25,9 @@ class Main {
 
     // Plane
     const textureLoader = new THREE.TextureLoader();
-    textureLoader.setPath("../resources/");
+    textureLoader.setPath("../Grafkom-UAS/resources");
     textureLoader.load(
-      "ground.jpg",
+      "grass.jpg",
       (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
@@ -450,7 +450,7 @@ function createRandomGrass() {
 }
 
 // Create multiple random grass instances
-for (let i = 0; i < 60; i++) { // Adjust the number of grass instances as needed
+for (let i = 0; i < 100; i++) { // Adjust the number of grass instances as needed
   createRandomGrass();
 }
 
