@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { Player, PlayerController, ThirdPersonCamera } from "./player.js";
+import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 
 class Main {
   static init() {
     var canvasRef = document.getElementById("canvas");
-
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(
       75,
@@ -18,23 +18,67 @@ class Main {
       canvas: canvasRef,
     });
 
-    this.renderer.setSize(800, 600);
-    this.renderer.setClearColor(0x00000); // Change background color for better visibility
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optionally change shadow map type for better quality
 
-
-
-
     // Plane
-    var plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(40, 40),
-      new THREE.MeshPhongMaterial({ color: 0xffffff })
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.setPath("../resources/");
+    textureLoader.load(
+      "ground.jpg",
+      (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1000, 1000);
+      
+        const groundMaterial = new THREE.MeshStandardMaterial({ map: texture });
+        const groundGeometry = new THREE.PlaneGeometry(2000, 2000, 100, 100);
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        this.scene.add(ground);
+      }
     );
 
-    plane.rotation.x = -Math.PI / 2;
-    plane.receiveShadow = true;
-    this.scene.add(plane);
+    const boundaryMaterial = new THREE.MeshStandardMaterial({
+      color: 0x333333,
+      transparent: true,
+      opacity: 0.1,
+    });
+    
+    const boundaries = [
+      // Front
+      new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial),
+      // Back
+      new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial),
+      // Left
+      new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial),
+      // Right
+      new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial),
+      // Top
+      new THREE.Mesh(new THREE.PlaneGeometry(100, 100), boundaryMaterial),
+    ];
+    
+    boundaries[0].position.set(0, 25, -30);
+    boundaries[0].rotation.set(0, 0, 0);
+    
+    boundaries[1].position.set(0, 25, 30);
+    boundaries[1].rotation.set(0, Math.PI, 0);
+    
+    boundaries[2].position.set(-30, 25, 0);
+    boundaries[2].rotation.set(0, Math.PI / 2, 0);
+    
+    boundaries[3].position.set(30, 25, 0);
+    boundaries[3].rotation.set(0, -Math.PI / 2, 0);
+    
+    boundaries[4].position.set(0, 50, 0);
+    boundaries[4].rotation.set(-Math.PI / 2, 0, 0);
+    
+    boundaries.forEach((boundary) => {
+      boundary.receiveShadow = true;
+      this.scene.add(boundary);
+    });
 
     // Directional lighting
     var directionalLight = new THREE.DirectionalLight(0xffffff);
@@ -66,10 +110,153 @@ class Main {
     this.player = new Player(
       thirdPerson, controller, this.scene
     );
+
+    // Initialize free camera controls
+    this.freeCamera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    this.freeCamera.position.set(0, 10, 20);
+    this.pointerLockControls = new PointerLockControls(this.freeCamera, this.renderer.domElement);
+    this.isFreeCamActive = false;
+
+    // Event listeners for pointer lock
+    document.addEventListener("click", () => {
+      if (this.isFreeCamActive) {
+        this.pointerLockControls.lock();
+      }
+    }, false);
+
+    this.pointerLockControls.addEventListener("lock", () => {
+      console.log("Pointer locked");
+    }, false);
+
+    this.pointerLockControls.addEventListener("unlock", () => {
+      console.log("Pointer unlocked");
+    }, false);
+
+    // Variables for movement
+    this.moveForward = false;
+    this.moveBackward = false;
+    this.moveLeft = false;
+    this.moveRight = false;
+    this.tiltRight = false;
+    this.tiltLeft = false;
+    this.moveSpeed = 0.1;
+    this.rollSpeed = 0.01;
+
+    // Function to handle key down events
+    this.onKeyDown = (event) => {
+      switch (event.key) {
+        case "w":
+          this.moveForward = true;
+          break;
+        case "s":
+          this.moveBackward = true;
+          break;
+        case "a":
+          this.moveLeft = true;
+          break;
+        case "d":
+          this.moveRight = true;
+          break;
+        case "q":
+          this.tiltLeft = true;
+          break;
+        case "e":
+          this.tiltRight = true;
+          break;
+        case "g":
+          this.toggleFreeCam();
+          break;
+      }
+    };
+
+    // Function to handle key up events
+    this.onKeyUp = (event) => {
+      switch (event.key) {
+        case "w":
+          this.moveForward = false;
+          break;
+        case "s":
+          this.moveBackward = false;
+          break;
+        case "a":
+          this.moveLeft = false;
+          break;
+        case "d":
+          this.moveRight = false;
+          break;
+        case "q":
+          this.tiltLeft = false;
+          break;
+        case "e":
+          this.tiltRight = false;
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", (event) => this.onKeyDown(event), false);
+    document.addEventListener("keyup", (event) => this.onKeyUp(event), false);
+
+    // Function to reset mouse and camera orientation
+    this.resetMouseAndCamera = () => {
+      this.pointerLockControls.reset();
+    };
+
+    // Add event listener for "R" key to reset mouse and camera orientation
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "r") {
+        this.resetMouseAndCamera();
+      }
+    }, false);
+  }
+
+  static toggleFreeCam() {
+    this.isFreeCamActive = !this.isFreeCamActive;
+    if (this.isFreeCamActive) {
+      this.camera = this.freeCamera;
+      this.pointerLockControls.lock(); // Lock pointer when toggling to free cam
+    } else {
+      this.camera = this.player.camera.camera;
+      this.pointerLockControls.unlock(); // Unlock pointer when toggling to player cam
+    }
   }
 
   static render(dt) {
-    this.player.update(dt);
+    if (this.isFreeCamActive) {
+      const moveVector = new THREE.Vector3();
+      if (this.moveForward) {
+        moveVector.add(this.pointerLockControls.getDirection(new THREE.Vector3()).multiplyScalar(this.moveSpeed));
+      }
+      if (this.moveBackward) {
+        moveVector.add(this.pointerLockControls.getDirection(new THREE.Vector3()).multiplyScalar(-this.moveSpeed));
+      }
+      if (this.moveLeft) {
+        this.pointerLockControls.moveRight(-this.moveSpeed);
+      }
+      if (this.moveRight) {
+        this.pointerLockControls.moveRight(this.moveSpeed);
+      }
+      if (this.tiltLeft) {
+        this.freeCamera.rotation.z += this.rollSpeed;
+      }
+      if (this.tiltRight) {
+        this.freeCamera.rotation.z -= this.rollSpeed;
+      }
+
+      this.freeCamera.position.add(moveVector);
+
+      // Ensure camera stays within boundaries
+      const boundarySize = 30;
+      this.freeCamera.position.x = Math.max(-boundarySize, Math.min(boundarySize, this.freeCamera.position.x));
+      this.freeCamera.position.z = Math.max(-boundarySize, Math.min(boundarySize, this.freeCamera.position.z));
+      this.freeCamera.position.y = Math.max(this.freeCamera.position.y, 1.5);
+    } else {
+      this.player.update(dt);
+    }
     this.renderer.render(this.scene, this.camera);
   }
 }
