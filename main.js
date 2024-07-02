@@ -25,7 +25,7 @@ class Main {
 
     // Plane
     const textureLoader = new THREE.TextureLoader();
-    textureLoader.setPath("../Grafkom-UAS/resources");
+    textureLoader.setPath("../resources/");
     textureLoader.load(
       "grass.jpg",
       (texture) => {
@@ -276,6 +276,19 @@ barracks.load('resources/Enviroment/Barracks.glb', function (gltf) {
   console.error(error);
 });
 
+var barracks = new GLTFLoader();
+barracks.load('resources/Enviroment/Barracks.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(20, 0, -27); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, 31, 0);
+  model.scale.set(6, 6, 6);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
 var cottage = new GLTFLoader();
 cottage.load('resources/Enviroment/Cottage.glb', function (gltf) {
   var model = gltf.scene;
@@ -283,6 +296,32 @@ cottage.load('resources/Enviroment/Cottage.glb', function (gltf) {
   model.castShadow = true;
   model.receiveShadow = true;
   model.rotation.set(0, Math.PI / 9, 0);
+  model.scale.set(15, 15, 15);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var cottage2 = new GLTFLoader();
+cottage2.load('resources/Enviroment/Cottage.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(-12, 0, -21); 
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, Math.PI / 2, 0);
+  model.scale.set(15, 15, 15);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var cottage3 = new GLTFLoader();
+cottage3.load('resources/Enviroment/Cottage.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(12, 0, 21); 
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, Math.PI / 2, 0);
   model.scale.set(15, 15, 15);
   Main.scene.add(model);
 }, undefined, function (error) {
@@ -302,18 +341,32 @@ Prairie.load('resources/Enviroment/Prairie Shed.glb', function (gltf) {
   console.error(error);
 });
 
-var tent = new GLTFLoader();
-tent.load('resources/Enviroment/Tent.glb', function (gltf) {
+var Prairie2 = new GLTFLoader();
+Prairie2.load('resources/Enviroment/Prairie Shed.glb', function (gltf) {
   var model = gltf.scene;
-  model.position.set(0, 5, 0); // Set position to (0,0,0)
+  model.position.set(-15, 2, 18); // Set position to (0,0,0)
   model.castShadow = true;
   model.receiveShadow = true;
-  model.rotation.set(0, 0, 0);
+  model.rotation.set(0, 10, 0);
   model.scale.set(2, 2, 2);
   Main.scene.add(model);
 }, undefined, function (error) {
   console.error(error);
 });
+
+var Prairie2 = new GLTFLoader();
+Prairie2.load('resources/Enviroment/Prairie Shed.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(16, 2, -18); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, 10, 0);
+  model.scale.set(2, 2, 2);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
 }
 
 { // TREE Static
@@ -428,9 +481,9 @@ function createRandomGrass() {
     var model = gltf.scene;
     
     // Random position
-    var x = getRandomValue(-30, 30);
+    var x = getRandomValue(-40, 40);
     var y = 0; // Assuming grass is on the ground, y can be 0
-    var z = getRandomValue(-30, 30);
+    var z = getRandomValue(-40, 40);
     model.position.set(x, y, z);
     
     // Random rotation
@@ -450,7 +503,7 @@ function createRandomGrass() {
 }
 
 // Create multiple random grass instances
-for (let i = 0; i < 100; i++) { // Adjust the number of grass instances as needed
+for (let i = 0; i < 200; i++) { // Adjust the number of grass instances as needed
   createRandomGrass();
 }
 
