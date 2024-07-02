@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Player, PlayerController, ThirdPersonCamera } from "./player.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 class Main {
   static init() {
@@ -259,6 +260,200 @@ class Main {
     }
     this.renderer.render(this.scene, this.camera);
   }
+}
+// enviroment renderering
+{//Houses
+var barracks = new GLTFLoader();
+barracks.load('resources/Enviroment/Barracks.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(20, 0, 0); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, -Math.PI / 2.3, 0);
+  model.scale.set(6, 6, 6);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var cottage = new GLTFLoader();
+cottage.load('resources/Enviroment/Cottage.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(-10, 0, 0); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, Math.PI / 9, 0);
+  model.scale.set(15, 15, 15);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var Prairie = new GLTFLoader();
+Prairie.load('resources/Enviroment/Prairie Shed.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(-5, 2, -10); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, Math.PI / 4, 0);
+  model.scale.set(2, 2, 2);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var tent = new GLTFLoader();
+tent.load('resources/Enviroment/Tent.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(0, 5, 0); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, 0, 0);
+  model.scale.set(2, 2, 2);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+}
+
+{ // TREE Static
+var pine_tree = new GLTFLoader();
+pine_tree.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(0, 3, 7); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, -Math.PI / 2.3, 0);
+  model.scale.set(2, 2, 2);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var pine_tree2 = new GLTFLoader();
+pine_tree2.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(15, 3, 7); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, -Math.PI / 2.3, 0);
+  model.scale.set(2, 2, 2);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var pine_tree3 = new GLTFLoader();
+pine_tree3.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(-15, 3, 7); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, -Math.PI / 2.3, 0);
+  model.scale.set(2, 2, 2);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var pine_tree4 = new GLTFLoader();
+pine_tree4.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(12, 3, -10); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, -Math.PI / 2.3, 0);
+  model.scale.set(2, 2, 2);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+
+var pine_tree5 = new GLTFLoader();
+pine_tree5.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(6, 3, 19); // Set position to (0,0,0)
+  model.castShadow = true;
+  model.receiveShadow = true;
+  model.rotation.set(0, -Math.PI / 2.3, 0);
+  model.scale.set(2, 2, 2);
+  Main.scene.add(model);
+}, undefined, function (error) {
+  console.error(error);
+});
+}
+
+{// tree spawner
+var pine_tree_loader = new GLTFLoader();
+
+function getRandomValue(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function createRandomTree() {
+  pine_tree_loader.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
+    var model = gltf.scene;
+    
+    // Random position
+    var x = getRandomValue(-100, 100);
+    var z = getRandomValue(-100, 100);
+    model.position.set(x, 3, z);
+
+    
+    // Random scale
+    model.scale.set(2, 2, 2);
+    
+    model.castShadow = true;
+    model.receiveShadow = true;
+    Main.scene.add(model);
+  }, undefined, function (error) {
+    console.error(error);
+  });
+}
+// Create multiple random trees
+for (let i = 0; i < 40; i++) { // Adjust the number of trees as needed
+  createRandomTree();
+}
+}
+
+{ // Grass spawner
+  var grassLoader = new GLTFLoader();
+
+function getRandomValue(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function createRandomGrass() {
+  grassLoader.load('resources/Enviroment/grass green.glb', function (gltf) {
+    var model = gltf.scene;
+    
+    // Random position
+    var x = getRandomValue(-30, 30);
+    var y = 0; // Assuming grass is on the ground, y can be 0
+    var z = getRandomValue(-30, 30);
+    model.position.set(x, y, z);
+    
+    // Random rotation
+    var rotationY = getRandomValue(-Math.PI, Math.PI);
+    model.rotation.set(0, rotationY, 0);
+    
+    // Random scale
+    var scale = getRandomValue(4, 4); // Grass typically varies less in size
+    model.scale.set(scale, scale, scale);
+    
+    model.castShadow = true;
+    model.receiveShadow = true;
+    Main.scene.add(model);
+  }, undefined, function (error) {
+    console.error(error);
+  });
+}
+
+// Create multiple random grass instances
+for (let i = 0; i < 60; i++) { // Adjust the number of grass instances as needed
+  createRandomGrass();
+}
+
 }
 
 var clock = new THREE.Clock();
