@@ -3,7 +3,7 @@ import { Player, PlayerController, ThirdPersonCamera } from "./player.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-class Main {
+export class Main {
   static init() {
     var canvasRef = document.getElementById("canvas");
     this.scene = new THREE.Scene();
@@ -18,14 +18,21 @@ class Main {
       antialias: true,
       canvas: canvasRef,
     });
-
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optionally change shadow map type for better quality
 
-    // Plane
+    // Load sky texture
     const textureLoader = new THREE.TextureLoader();
     textureLoader.setPath("../resources/");
+    const skyTexture = textureLoader.load("sky.jpg");
+
+    // Create sky dome
+    const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture, side: THREE.BackSide });
+    const skyGeometry = new THREE.SphereGeometry(1000, 32, 32); 
+    const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+    this.scene.add(sky);
+
+    // Ground
     textureLoader.load(
       "grass.jpg",
       (texture) => {
@@ -42,6 +49,7 @@ class Main {
       }
     );
 
+    // Boundaries
     const boundaryMaterial = new THREE.MeshStandardMaterial({
       color: 0x333333,
       transparent: true,
@@ -49,36 +57,19 @@ class Main {
     });
     
     const boundaries = [
-      // Front
-      new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial),
-      // Back
-      new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial),
-      // Left
-      new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial),
-      // Right
-      new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial),
-      // Top
-      new THREE.Mesh(new THREE.PlaneGeometry(100, 100), boundaryMaterial),
+      { position: [0, 25, -30], rotation: [0, 0, 0] },
+      { position: [0, 25, 30], rotation: [0, Math.PI, 0] },
+      { position: [-30, 25, 0], rotation: [0, Math.PI / 2, 0] },
+      { position: [30, 25, 0], rotation: [0, -Math.PI / 2, 0] },
+      { position: [0, 50, 0], rotation: [-Math.PI / 2, 0, 0] },
     ];
-    
-    boundaries[0].position.set(0, 25, -30);
-    boundaries[0].rotation.set(0, 0, 0);
-    
-    boundaries[1].position.set(0, 25, 30);
-    boundaries[1].rotation.set(0, Math.PI, 0);
-    
-    boundaries[2].position.set(-30, 25, 0);
-    boundaries[2].rotation.set(0, Math.PI / 2, 0);
-    
-    boundaries[3].position.set(30, 25, 0);
-    boundaries[3].rotation.set(0, -Math.PI / 2, 0);
-    
-    boundaries[4].position.set(0, 50, 0);
-    boundaries[4].rotation.set(-Math.PI / 2, 0, 0);
-    
-    boundaries.forEach((boundary) => {
-      boundary.receiveShadow = true;
-      this.scene.add(boundary);
+
+    boundaries.forEach(boundary => {
+      const boundaryMesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 50), boundaryMaterial);
+      boundaryMesh.position.set(...boundary.position);
+      boundaryMesh.rotation.set(...boundary.rotation);
+      boundaryMesh.receiveShadow = true;
+      this.scene.add(boundaryMesh);
     });
 
     // Directional lighting
@@ -96,8 +87,6 @@ class Main {
     directionalLight.shadow.camera.bottom = -20;
     directionalLight.shadow.bias = -0.01;
 
-    var directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight);
-    this.scene.add(directionalLightHelper);
     this.scene.add(directionalLight);
 
     var thirdPerson = new ThirdPersonCamera(
@@ -107,12 +96,9 @@ class Main {
     );
 
     var controller = new PlayerController();
+    this.player = new Player(thirdPerson, controller, this.scene);
 
-    this.player = new Player(
-      thirdPerson, controller, this.scene
-    );
-
-    // Initialize free camera controls
+    // Free camera controls
     this.freeCamera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
@@ -128,15 +114,7 @@ class Main {
       if (this.isFreeCamActive) {
         this.pointerLockControls.lock();
       }
-    }, false);
-
-    this.pointerLockControls.addEventListener("lock", () => {
-      console.log("Pointer locked");
-    }, false);
-
-    this.pointerLockControls.addEventListener("unlock", () => {
-      console.log("Pointer unlocked");
-    }, false);
+    });
 
     // Variables for movement
     this.moveForward = false;
@@ -148,81 +126,76 @@ class Main {
     this.moveSpeed = 0.1;
     this.rollSpeed = 0.01;
 
-    // Function to handle key down events
-    this.onKeyDown = (event) => {
-      switch (event.key) {
-        case "w":
-          this.moveForward = true;
-          break;
-        case "s":
-          this.moveBackward = true;
-          break;
-        case "a":
-          this.moveLeft = true;
-          break;
-        case "d":
-          this.moveRight = true;
-          break;
-        case "q":
-          this.tiltLeft = true;
-          break;
-        case "e":
-          this.tiltRight = true;
-          break;
-        case "g":
-          this.toggleFreeCam();
-          break;
-      }
-    };
+    // Event listeners for key down and up
+    document.addEventListener("keydown", this.onKeyDown.bind(this));
+    document.addEventListener("keyup", this.onKeyUp.bind(this));
 
-    // Function to handle key up events
-    this.onKeyUp = (event) => {
-      switch (event.key) {
-        case "w":
-          this.moveForward = false;
-          break;
-        case "s":
-          this.moveBackward = false;
-          break;
-        case "a":
-          this.moveLeft = false;
-          break;
-        case "d":
-          this.moveRight = false;
-          break;
-        case "q":
-          this.tiltLeft = false;
-          break;
-        case "e":
-          this.tiltRight = false;
-          break;
-      }
-    };
-
-    document.addEventListener("keydown", (event) => this.onKeyDown(event), false);
-    document.addEventListener("keyup", (event) => this.onKeyUp(event), false);
-
-    // Function to reset mouse and camera orientation
-    this.resetMouseAndCamera = () => {
-      this.pointerLockControls.reset();
-    };
-
-    // Add event listener for "R" key to reset mouse and camera orientation
+    // Reset mouse and camera orientation
     document.addEventListener("keydown", (event) => {
       if (event.key === "r") {
-        this.resetMouseAndCamera();
+        this.pointerLockControls.reset();
       }
-    }, false);
+    });
+
   }
 
   static toggleFreeCam() {
     this.isFreeCamActive = !this.isFreeCamActive;
     if (this.isFreeCamActive) {
       this.camera = this.freeCamera;
-      this.pointerLockControls.lock(); // Lock pointer when toggling to free cam
+      this.pointerLockControls.lock();
     } else {
       this.camera = this.player.camera.camera;
-      this.pointerLockControls.unlock(); // Unlock pointer when toggling to player cam
+      this.pointerLockControls.unlock();
+    }
+  }
+
+  static onKeyDown(event) {
+    switch (event.key) {
+      case "w":
+        this.moveForward = true;
+        break;
+      case "s":
+        this.moveBackward = true;
+        break;
+      case "a":
+        this.moveLeft = true;
+        break;
+      case "d":
+        this.moveRight = true;
+        break;
+      case "q":
+        this.tiltLeft = true;
+        break;
+      case "e":
+        this.tiltRight = true;
+        break;
+      case "g":
+        this.toggleFreeCam();
+        break;
+    }
+  }
+
+  static onKeyUp(event) {
+    switch (event.key) {
+      case "w":
+        this.moveForward = false;
+        break;
+      case "s":
+        this.moveBackward = false;
+        break;
+      case "a":
+        this.moveLeft = false;
+        break;
+      case "d":
+        this.moveRight = false;
+        break;
+      case "q":
+        this.tiltLeft = false;
+        break;
+      case "e":
+        this.tiltRight = false;
+        break;
     }
   }
 
@@ -260,261 +233,17 @@ class Main {
     }
     this.renderer.render(this.scene, this.camera);
   }
-}
-// enviroment renderering
-{//Houses
-var barracks = new GLTFLoader();
-barracks.load('resources/Enviroment/Barracks.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(20, 0, 0); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, -Math.PI / 2.3, 0);
-  model.scale.set(6, 6, 6);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var barracks = new GLTFLoader();
-barracks.load('resources/Enviroment/Barracks.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(20, 0, -27); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, 31, 0);
-  model.scale.set(6, 6, 6);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var cottage = new GLTFLoader();
-cottage.load('resources/Enviroment/Cottage.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(-10, 0, 0); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, Math.PI / 9, 0);
-  model.scale.set(15, 15, 15);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var cottage2 = new GLTFLoader();
-cottage2.load('resources/Enviroment/Cottage.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(-12, 0, -21); 
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, Math.PI / 2, 0);
-  model.scale.set(15, 15, 15);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var cottage3 = new GLTFLoader();
-cottage3.load('resources/Enviroment/Cottage.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(12, 0, 21); 
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, Math.PI / 2, 0);
-  model.scale.set(15, 15, 15);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var Prairie = new GLTFLoader();
-Prairie.load('resources/Enviroment/Prairie Shed.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(-5, 2, -10); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, Math.PI / 4, 0);
-  model.scale.set(2, 2, 2);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var Prairie2 = new GLTFLoader();
-Prairie2.load('resources/Enviroment/Prairie Shed.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(-15, 2, 18); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, 10, 0);
-  model.scale.set(2, 2, 2);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var Prairie2 = new GLTFLoader();
-Prairie2.load('resources/Enviroment/Prairie Shed.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(16, 2, -18); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, 10, 0);
-  model.scale.set(2, 2, 2);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
 
 }
 
-{ // TREE Static
-var pine_tree = new GLTFLoader();
-pine_tree.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(0, 3, 7); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, -Math.PI / 2.3, 0);
-  model.scale.set(2, 2, 2);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var pine_tree2 = new GLTFLoader();
-pine_tree2.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(15, 3, 7); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, -Math.PI / 2.3, 0);
-  model.scale.set(2, 2, 2);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var pine_tree3 = new GLTFLoader();
-pine_tree3.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(-15, 3, 7); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, -Math.PI / 2.3, 0);
-  model.scale.set(2, 2, 2);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var pine_tree4 = new GLTFLoader();
-pine_tree4.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(12, 3, -10); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, -Math.PI / 2.3, 0);
-  model.scale.set(2, 2, 2);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-
-var pine_tree5 = new GLTFLoader();
-pine_tree5.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
-  var model = gltf.scene;
-  model.position.set(6, 3, 19); // Set position to (0,0,0)
-  model.castShadow = true;
-  model.receiveShadow = true;
-  model.rotation.set(0, -Math.PI / 2.3, 0);
-  model.scale.set(2, 2, 2);
-  Main.scene.add(model);
-}, undefined, function (error) {
-  console.error(error);
-});
-}
-
-{// tree spawner
-var pine_tree_loader = new GLTFLoader();
-
-function getRandomValue(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function createRandomTree() {
-  pine_tree_loader.load('resources/Enviroment/Pine Tree.glb', function (gltf) {
-    var model = gltf.scene;
-    
-    // Random position
-    var x = getRandomValue(-100, 100);
-    var z = getRandomValue(-100, 100);
-    model.position.set(x, 3, z);
-
-    
-    // Random scale
-    model.scale.set(2, 2, 2);
-    
-    model.castShadow = true;
-    model.receiveShadow = true;
-    Main.scene.add(model);
-  }, undefined, function (error) {
-    console.error(error);
-  });
-}
-// Create multiple random trees
-for (let i = 0; i < 40; i++) { // Adjust the number of trees as needed
-  createRandomTree();
-}
-}
-
-{ // Grass spawner
-  var grassLoader = new GLTFLoader();
-
-function getRandomValue(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function createRandomGrass() {
-  grassLoader.load('resources/Enviroment/grass green.glb', function (gltf) {
-    var model = gltf.scene;
-    
-    // Random position
-    var x = getRandomValue(-40, 40);
-    var y = 0; // Assuming grass is on the ground, y can be 0
-    var z = getRandomValue(-40, 40);
-    model.position.set(x, y, z);
-    
-    // Random rotation
-    var rotationY = getRandomValue(-Math.PI, Math.PI);
-    model.rotation.set(0, rotationY, 0);
-    
-    // Random scale
-    var scale = getRandomValue(4, 4); // Grass typically varies less in size
-    model.scale.set(scale, scale, scale);
-    
-    model.castShadow = true;
-    model.receiveShadow = true;
-    Main.scene.add(model);
-  }, undefined, function (error) {
-    console.error(error);
-  });
-}
-
-// Create multiple random grass instances
-for (let i = 0; i < 200; i++) { // Adjust the number of grass instances as needed
-  createRandomGrass();
-}
-
-}
-
-var clock = new THREE.Clock();
 Main.init();
 
-function animate() {
-  Main.render(clock.getDelta());
+var lastTimestamp = 0;
+function animate(timestamp) {
+  var dt = (timestamp - lastTimestamp) / 1000;
+  lastTimestamp = timestamp;
+
+  Main.render(dt);
   requestAnimationFrame(animate);
 }
-
-requestAnimationFrame(animate);
+animate();

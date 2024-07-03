@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"; // Import GLTFLoader
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 export class Player {
     constructor(camera, controller, scene) {
@@ -16,9 +16,10 @@ export class Player {
         this.camera.setup(new THREE.Vector3(0, 0, 0), this.rotationVector);
 
         this.loadModel();
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 50; i++) {
             this.createApple();
-          }
+        }
+        this.loadEnvironmentModels();  // Ensure this method is defined in this class
     }
 
     loadModel() {
@@ -33,21 +34,20 @@ export class Player {
             this.scene.add(this.mesh);
             this.mesh.rotation.y = Math.PI / 2;
             this.targetRotation.y = Math.PI / 2;
-    
-            // Create a bounding box for the player model
+
             this.boundingBox = new THREE.Box3().setFromObject(this.mesh);
-    
+
             this.mixer = new THREE.AnimationMixer(this.mesh);
             var onLoad = (animName, anim) => {
                 var clip = anim.animations[0];
                 var action = this.mixer.clipAction(clip);
-    
+
                 this.animations[animName] = {
                     clip: clip,
                     action: action
                 };
             };
-    
+
             var loader = new FBXLoader();
             loader.setPath("../resources/Knight/");
             loader.load('Knight idle.fbx', (fbx) => { onLoad('idle', fbx); });
@@ -55,82 +55,147 @@ export class Player {
         });
     }
 
-    createApple(){
+    createApple() {
         const gltfLoader = new GLTFLoader();
         gltfLoader.setPath("../resources/");
         gltfLoader.load("Apple Green.glb", (gltf) => {
-          const model = gltf.scene;
-          model.traverse((node) => {
-            if (node.isMesh) {
-              node.castShadow = true;
-              node.receiveShadow = true;
-            }
-          });
-          model.type = "apple";
-          model.scale.set(0.5, 0.5, 0.5);
-          const z = (Math.random() * 2 * Math.PI) / 2;
-          model.rotation.z = 0;
-          model.rotation.x = 0;
-          model.position.set(
-            Math.random() * 60 - 30,
-            0.5,
-            Math.random() * 60 - 30
-          );
-           // Create a hitbox for the apple (assuming a bounding sphere)
-          const appleHitbox = new THREE.Sphere(model.position, 1);
-          
-          // Add hitbox as userData to the model
-          model.userData.hitbox = appleHitbox;
-          model.userData.velocity = new THREE.Vector3(
-            Math.cos(z) * 0.05,
-            0,
-            Math.sin(z) * 0.05
-          );
-          this.scene.add(model);
-          if (gltf.animations && gltf.animations.length > 0) {
-            const mixer = new THREE.AnimationMixer(model);
-            gltf.animations.forEach((clip) => {
-              mixer.clipAction(clip).play();
+            const model = gltf.scene;
+            model.traverse((node) => {
+                if (node.isMesh) {
+                    node.castShadow = true;
+                    node.receiveShadow = true;
+                }
             });
-            mixers.push(mixer);
-          }
+            model.type = "apple";
+            model.scale.set(0.5, 0.5, 0.5);
+            const z = (Math.random() * 2 * Math.PI) / 2;
+            model.rotation.z = 0;
+            model.rotation.x = 0;
+            model.position.set(
+                Math.random() * 60 - 30,
+                0.5,
+                Math.random() * 60 - 30
+            );
+
+            const appleHitbox = new THREE.Sphere(model.position, 1);
+
+            model.userData.hitbox = appleHitbox;
+            model.userData.velocity = new THREE.Vector3(
+                Math.cos(z) * 0.05,
+                0,
+                Math.sin(z) * 0.05
+            );
+            this.scene.add(model);
+            if (gltf.animations && gltf.animations.length > 0) {
+                const mixer = new THREE.AnimationMixer(model);
+                gltf.animations.forEach((clip) => {
+                    mixer.clipAction(clip).play();
+                });
+                mixers.push(mixer);
+            }
         });
     }
 
-    // detectAppleCollision(playerBoundingBox, scene) {    
-    //     scene.children.forEach((child) => {
-    //         if (child.type === "apple") {
-    //             const appleHitbox = child.userData.hitbox;
-    
-    //             // Check for intersection between player's bounding box and apple hitbox
-    //             if (playerBoundingBox.intersectsSphere(appleHitbox)) {
-    //                 // Collision detected!
-    //                 console.log("Apple collected!");
-    
-    //                 // Remove the apple from the scene
-    //                 scene.remove(child);
-    //             }
-    //         }
-    //     });
-    // }
+    getRandomPosition(min, max) {
+        return Math.random() * (max - min) - 30;
+    }
+
+    checkOverlap(position, objects, minDistance) {
+        for (const obj of objects) {
+            const distance = Math.sqrt(
+                Math.pow(position[0] - obj.position[0], 2) +
+                Math.pow(position[1] - obj.position[1], 2) +
+                Math.pow(position[2] - obj.position[2], 2)
+            );
+            if (distance < minDistance) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    getRandomNonOverlappingPosition(existingObjects, minDistance) {
+        let position;
+        let tries = 0;
+        const maxTries = 100; // Limit the number of tries to prevent infinite loops
+      
+        do {
+            position = [this.getRandomPosition(-30, 30), 0, this.getRandomPosition(-30, 30)];
+            tries++;
+        } while (this.checkOverlap(position, existingObjects, minDistance) && tries < maxTries);
+      
+        return position;
+    }
+
+    loadEnvironmentModels() {
+        const environmentObjects = [
+            { path: 'Enviroment/Barracks.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
+            { path: 'Enviroment/Barracks.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
+            { path: 'Enviroment/Barracks.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
+            { path: 'Enviroment/Cottage.glb', rotation: [0, 0, 0], scale: [15, 15, 15] },
+            { path: 'Enviroment/Cottage.glb', rotation: [0, 0, 0], scale: [15, 15, 15] },
+            { path: 'Enviroment/Cottage.glb', rotation: [0, 0, 0], scale: [15, 15, 15] },
+            { path: 'Enviroment/Prairie Shed.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Prairie Shed.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
+            { path: 'Enviroment/Tent.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
+            { path: 'Enviroment/Tent.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
+        ];
+        const loadedObjects = [];
+        const loader = new GLTFLoader();
+        loader.setPath("../resources/");
+        
+        environmentObjects.forEach((obj) => {
+            loader.load(obj.path, (gltf) => {
+                const model = gltf.scene;
+                const position = this.getRandomNonOverlappingPosition(loadedObjects, 10); // Ensure objects do not overlap
+                
+                model.traverse((node) => {
+                    if (node.isMesh) {
+                        node.castShadow = true;
+                        node.receiveShadow = true;
+                    }
+                });
+                model.type = "env";
+                model.rotation.set(...obj.rotation);
+                model.scale.set(...obj.scale);
+                model.position.set(...position);
+
+                const envHitbox = new THREE.Box3().setFromObject(model, true);
+                model.userData.hitbox = envHitbox;;
+
+                this.scene.add(model);
+                loadedObjects.push(model); // Keep track of loaded objects for overlap checking
+            });
+        });
+    }
+
 
     isPositionWithinBoundaries(position) {
-        const boundarySize = 30; // Adjust according to your scene's boundaries
-    
+        const boundarySize = 30;
+
         return (
             Math.abs(position.x) <= boundarySize &&
             Math.abs(position.z) <= boundarySize
-            // Optionally, add Y-axis boundary checks if needed
-            // position.y >= minY && position.y <= maxY
         );
     }
-    
+
     update(dt) {
         if (!this.mesh) return;
-    
+
         var direction = new THREE.Vector3(0, 0, 0);
         var moveSpeed = 10;
-    
+
         if (this.controller.key['forward']) {
             direction.x += 1;
         }
@@ -143,7 +208,7 @@ export class Player {
         if (this.controller.key['right']) {
             direction.z += 1;
         }
-    
+
         if (direction.length() === 0) {
             if (this.animations['idle']) {
                 if (this.state !== 'idle') {
@@ -162,13 +227,12 @@ export class Player {
                 this.mixer.clipAction(this.animations['run'].clip).play();
                 this.mixer.update(dt);
             }
-    
+
             direction.normalize();
             direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.camera.rotationAngle.y);
-    
+
             const newPosition = this.mesh.position.clone().add(direction.multiplyScalar(dt * moveSpeed));
-    
-            // Check boundaries before updating position
+
             if (this.isPositionWithinBoundaries(newPosition)) {
                 this.mesh.position.copy(newPosition);
                 if (direction.length() > 0) {
@@ -176,37 +240,48 @@ export class Player {
                 }
             }
         }
-    
+
         this.mesh.rotation.y = THREE.MathUtils.lerp(this.mesh.rotation.y, this.targetRotation.y, 0.1);
-    
-        // Update the bounding box position
+
         this.boundingBox.setFromObject(this.mesh);
-    
+
         this.camera.updateRotation(this.controller, dt);
         this.camera.setup(this.mesh.position, this.rotationVector);
         this.detectAppleCollision(this.boundingBox, this.scene);
+        this.detectEnvironmentCollision(this.boundingBox, this.scene);
     }
-    
-    detectAppleCollision(playerBoundingBox, scene) {    
+
+    detectAppleCollision(playerBoundingBox, scene) {
         scene.children.forEach((child) => {
             if (child.type === "apple") {
                 const appleHitbox = child.userData.hitbox;
-    
-                // Check for intersection between player's bounding box and apple hitbox
+
                 if (playerBoundingBox.intersectsSphere(appleHitbox)) {
-                    // Collision detected!
                     console.log("Apple collected!");
-    
-                    // Remove the apple from the scene
+
                     scene.remove(child);
                 }
             }
         });
     }
-    
+    detectEnvironmentCollision(playerBoundingBox, scene) {
+        scene.children.forEach((child) => {
+            const prevPosition = playerBoundingBox.getCenter(new THREE.Vector3());           
+            if (child.type === "env") {
+                const envHitbox = child.userData.hitbox;
+
+                if (playerBoundingBox.intersectsBox(envHitbox)) {
+                    console.log("Collision detected");
+                    this.mesh.position.y = 0;
+                    this.controller.key['forward'] = false; 
+                    this.controller.key['backward'] = false; 
+                    this.controller.key['left'] = false; 
+                    this.controller.key['right'] = false; 
+                }
+            }
+        });
+    }
 }
-
-
 
 export class PlayerController {
     constructor() {
@@ -314,6 +389,7 @@ export class PlayerController {
         }
     }
 }
+
 
 export class ThirdPersonCamera {
     constructor(camera, positionOffset, targetOffset) {
