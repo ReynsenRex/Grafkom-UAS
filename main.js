@@ -92,7 +92,7 @@ export class Main {
     directionalLight.shadow.bias = -0.01;
 
     this.scene.add(directionalLight);
-    this.scene.add(directionalLightHelper);
+    // this.scene.add(directionalLightHelper);
     this.scene.add(pointlight);
 
     var thirdPerson = new ThirdPersonCamera(
@@ -109,7 +109,7 @@ export class Main {
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      5000
     );
     this.freeCamera.position.set(0, 10, 20);
     this.pointerLockControls = new PointerLockControls(this.freeCamera, this.renderer.domElement);
