@@ -268,7 +268,12 @@ function getRandomValue(min, max) {
 function createRandomGrass() {
   grassLoader.load('resources/Enviroment/grass green.glb', function (gltf) {
     var model = gltf.scene;
-    
+    model.traverse((node) => {
+      if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+      }
+  });
     // Random position
     var x = getRandomValue(-40, 40);
     var y = 0; // Assuming grass is on the ground, y can be 0
