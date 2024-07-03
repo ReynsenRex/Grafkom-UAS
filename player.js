@@ -24,8 +24,8 @@ export class Player {
 
     loadModel() {
         var loader = new FBXLoader();
-        loader.setPath("../resources/Knight/");
-        loader.load("Knight idle.fbx", (fbx) => {
+        loader.setPath("../resources/Castle Guard/");
+        loader.load("Sad Idle.fbx", (fbx) => {
             fbx.scale.setScalar(0.01);
             fbx.traverse(c => {
                 c.castShadow = true;
@@ -49,10 +49,43 @@ export class Player {
             };
 
             var loader = new FBXLoader();
-            loader.setPath("../resources/Knight/");
-            loader.load('Knight idle.fbx', (fbx) => { onLoad('idle', fbx); });
-            loader.load('Knight run.fbx', (fbx) => { onLoad('run', fbx); });
+            loader.setPath("../resources/Castle Guard/");
+            loader.load('Sad Idle.fbx', (fbx) => { onLoad('idle', fbx); });
+            loader.load('Medium Run.fbx', (fbx) => { onLoad('run', fbx); });
         });
+        
+        var npc = new FBXLoader();
+        npc.setPath("../resources/npc/");
+        npc.load("Dwarf Idle.fbx", (fbx) => {
+            fbx.scale.setScalar(0.01);
+            fbx.traverse(c => {
+                c.castShadow = true;
+            });
+            this.meshNpc = fbx;
+            this.scene.add(this.meshNpc);
+            this.meshNpc.rotation.y = Math.PI / 2;
+            this.targetRotation.y = Math.PI / 2;
+            this.meshNpc.position.x = 0;
+            this.meshNpc.position.z = 0;
+
+            this.boundingBox = new THREE.Box3().setFromObject(this.meshNpc);
+
+            this.mixerNpc = new THREE.AnimationMixer(this.meshNpc);
+            var onLoad = (animName, anim) => {
+                var clip = anim.animations[0];
+                var action = this.mixerNpc.clipAction(clip);
+
+                this.animations[animName] = {
+                    clip: clip,
+                    action: action
+                };
+            };
+
+            var loaderNpc = new FBXLoader();
+            loaderNpc.setPath("../resources/npc/");
+            loaderNpc.load('Dwarf Idle.fbx', (fbx) => { onLoad('idle', fbx); });
+        });
+
     }
 
     createApple() {
@@ -454,12 +487,12 @@ export class ThirdPersonCamera {
         // Apply the rotation around the Y axis
         temp.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle.y + this.rotationAngle.y);
 
-        // Create a quaternion for the X axis rotation
-        const quaternion = new THREE.Quaternion();
-        quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.rotationAngle.x);
+        // // Create a quaternion for the X axis rotation
+        // const quaternion = new THREE.Quaternion();
+        // quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.rotationAngle.x);
 
-        // Rotate the temp vector by the quaternion
-        temp.applyQuaternion(quaternion);
+        // // Rotate the temp vector by the quaternion
+        // temp.applyQuaternion(quaternion);
 
         temp.addVectors(target, temp);
         this.camera.position.copy(temp);
