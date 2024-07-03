@@ -97,22 +97,22 @@ export class Player {
         });
     }
 
-    detectAppleCollision(playerBoundingBox, scene) {    
-        scene.children.forEach((child) => {
-            if (child.type === "apple") {
-                const appleHitbox = child.userData.hitbox;
+    // detectAppleCollision(playerBoundingBox, scene) {    
+    //     scene.children.forEach((child) => {
+    //         if (child.type === "apple") {
+    //             const appleHitbox = child.userData.hitbox;
     
-                // Check for intersection between player's bounding box and apple hitbox
-                if (playerBoundingBox.intersectsSphere(appleHitbox)) {
-                    // Collision detected!
-                    console.log("Apple collected!");
+    //             // Check for intersection between player's bounding box and apple hitbox
+    //             if (playerBoundingBox.intersectsSphere(appleHitbox)) {
+    //                 // Collision detected!
+    //                 console.log("Apple collected!");
     
-                    // Remove the apple from the scene
-                    scene.remove(child);
-                }
-            }
-        });
-    }
+    //                 // Remove the apple from the scene
+    //                 scene.remove(child);
+    //             }
+    //         }
+    //     });
+    // }
 
     isPositionWithinBoundaries(position) {
         const boundarySize = 30; // Adjust according to your scene's boundaries
