@@ -11,7 +11,7 @@ export class Main {
       75,
       window.innerWidth / window.innerHeight,
       0.1,
-      1000
+      5000
     );
     this.scene.fog = new THREE.Fog(0x808080, 0, 100);
     this.renderer = new THREE.WebGLRenderer({
