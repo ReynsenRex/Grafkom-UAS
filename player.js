@@ -426,12 +426,6 @@ export class ThirdPersonCamera {
             controller.key["zoom"] = 0; // Reset zoom input
         }
 
-        // Toggle camera view
-        if (controller.key["toggleCamera"]) {
-            this.isFirstPerson = !this.isFirstPerson;
-            controller.key["toggleCamera"] = false; // Reset toggle input
-        }
-
         // Update rotation based on mouse movements
         if (controller.mouseDown && document.pointerLockElement) {
             const mouseSpeed = 0.002;
@@ -453,7 +447,16 @@ export class ThirdPersonCamera {
         var temp = new THREE.Vector3();
         temp.copy(this.positionOffset);
         temp.multiplyScalar(this.zoomLevel);
+
+        // Apply the rotation around the Y axis
         temp.applyAxisAngle(new THREE.Vector3(0, 1, 0), angle.y + this.rotationAngle.y);
+
+        // Create a quaternion for the X axis rotation
+        const quaternion = new THREE.Quaternion();
+        quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.rotationAngle.x);
+
+        // Rotate the temp vector by the quaternion
+        temp.applyQuaternion(quaternion);
 
         temp.addVectors(target, temp);
         this.camera.position.copy(temp);

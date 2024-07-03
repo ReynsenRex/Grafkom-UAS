@@ -76,6 +76,7 @@ export class Main {
     var directionalLight = new THREE.DirectionalLight(0xffffff);
     var directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight);
     var pointlight = new THREE.PointLight(0xffffff);
+    var ambient = new THREE.AmbientLight(0xffffff, 0.1);
 
     directionalLight.castShadow = true;
     directionalLight.position.set(3, 19, 18);
@@ -94,6 +95,7 @@ export class Main {
     this.scene.add(directionalLight);
     // this.scene.add(directionalLightHelper);
     this.scene.add(pointlight);
+    this.scene.add(ambient);
 
     var thirdPerson = new ThirdPersonCamera(
       this.camera,
@@ -135,13 +137,6 @@ export class Main {
     // Event listeners for key down and up
     document.addEventListener("keydown", this.onKeyDown.bind(this));
     document.addEventListener("keyup", this.onKeyUp.bind(this));
-
-    // Reset mouse and camera orientation
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "r") {
-        this.pointerLockControls.reset();
-      }
-    });
 
   }
 
@@ -297,7 +292,7 @@ function createRandomGrass() {
 }
 
 // Create multiple random grass instances
-for (let i = 0; i < 200; i++) { // Adjust the number of grass instances as needed
+for (let i = 0; i < 100; i++) { // Adjust the number of grass instances as needed
   createRandomGrass();
 }
 
