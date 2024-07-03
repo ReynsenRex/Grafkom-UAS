@@ -58,7 +58,7 @@ export class Player {
     createApple() {
         const gltfLoader = new GLTFLoader();
         gltfLoader.setPath("../resources/");
-        gltfLoader.load("Apple Green.glb", (gltf) => {
+        gltfLoader.load("Apple.glb", (gltf) => {
             const model = gltf.scene;
             model.traverse((node) => {
                 if (node.isMesh) {
@@ -67,7 +67,7 @@ export class Player {
                 }
             });
             model.type = "apple";
-            model.scale.set(0.5, 0.5, 0.5);
+            model.scale.set(0.06, 0.06, 0.06);
             const z = (Math.random() * 2 * Math.PI) / 2;
             model.rotation.z = 0;
             model.rotation.x = 0;
@@ -97,7 +97,7 @@ export class Player {
     }
 
     getRandomPosition(min, max) {
-        return Math.random() * (max - min) - 30;
+        return Math.random() * (max - min) + min;
     }
 
     checkOverlap(position, objects, minDistance) {
@@ -128,28 +128,27 @@ export class Player {
     }
 
     loadEnvironmentModels() {
+        var x,z;
+        x = this.getRandomPosition(-100,100);
+        z = this.getRandomPosition(-100,100);
         const environmentObjects = [
-            { path: 'Enviroment/Barracks.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
-            { path: 'Enviroment/Barracks.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
-            { path: 'Enviroment/Barracks.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
-            { path: 'Enviroment/Cottage.glb', rotation: [0, 0, 0], scale: [15, 15, 15] },
-            { path: 'Enviroment/Cottage.glb', rotation: [0, 0, 0], scale: [15, 15, 15] },
-            { path: 'Enviroment/Cottage.glb', rotation: [0, 0, 0], scale: [15, 15, 15] },
-            { path: 'Enviroment/Prairie Shed.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Prairie Shed.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [5, 5, 5] },
-            { path: 'Enviroment/Tent.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
-            { path: 'Enviroment/Tent.glb', rotation: [0, 0, 0], scale: [6, 6, 6] },
+            { path: 'Enviroment/Barracks.glb', rotation: [0, 31, 0], scale: [6, 6, 6], position: [20,0,-27] },
+            { path: 'Enviroment/Cottage.glb', rotation: [0, Math.PI / 2, 0], scale: [15, 15, 15] , position: [-12,0,-21] },
+            { path: 'Enviroment/Cottage.glb', rotation: [0, Math.PI / 2, 0], scale: [15, 15, 15] , position: [12,0,21] },
+            { path: 'Enviroment/Prairie Shed.glb', rotation: [0, 10, 0], scale: [2,2,2] , position: [-15,2,18] },
+            { path: 'Enviroment/Prairie Shed.glb', rotation: [0, 10, 0], scale: [2,2,2] , position: [16,2,-18]},
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2,2,2], position: [15,3,12]},
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [-18, 3, 7]},
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [-11, 3, 13] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [14, 3, -11] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [9, 3, -12] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [-7, 3, -14] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [8, 3, 9] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [8, 3, 19] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [2, 3, 13] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [5, 3, -9] },
+            { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [-8, 3, -9] },
+            { path: '/realSun.glb', rotation: [-10, 0, 0], scale: [1, 1, 1], position: [3, 21, 20] },
         ];
         const loadedObjects = [];
         const loader = new GLTFLoader();
@@ -169,8 +168,8 @@ export class Player {
                 model.type = "env";
                 model.rotation.set(...obj.rotation);
                 model.scale.set(...obj.scale);
-                model.position.set(...position);
-
+                model.position.set(...obj.position);
+                
                 const envHitbox = new THREE.Box3().setFromObject(model, true);
                 model.userData.hitbox = envHitbox;;
 

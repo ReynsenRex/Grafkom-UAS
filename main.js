@@ -13,7 +13,7 @@ export class Main {
       0.1,
       1000
     );
-
+    this.scene.fog = new THREE.Fog(0x808080, 0, 100);
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: canvasRef,
@@ -74,20 +74,26 @@ export class Main {
 
     // Directional lighting
     var directionalLight = new THREE.DirectionalLight(0xffffff);
+    var directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight);
+    var pointlight = new THREE.PointLight(0xffffff);
+
     directionalLight.castShadow = true;
-    directionalLight.position.set(3, 10, 10);
+    directionalLight.position.set(3, 19, 18);
+    pointlight.position.set(3, 20, 19);
 
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
     directionalLight.shadow.camera.near = 0.5;
     directionalLight.shadow.camera.far = 50;
-    directionalLight.shadow.camera.left = -20;
-    directionalLight.shadow.camera.right = 20;
-    directionalLight.shadow.camera.top = 20;
-    directionalLight.shadow.camera.bottom = -20;
+    directionalLight.shadow.camera.left = -30;
+    directionalLight.shadow.camera.right = 30;
+    directionalLight.shadow.camera.top = 30;
+    directionalLight.shadow.camera.bottom = -30;
     directionalLight.shadow.bias = -0.01;
 
     this.scene.add(directionalLight);
+    this.scene.add(directionalLightHelper);
+    this.scene.add(pointlight);
 
     var thirdPerson = new ThirdPersonCamera(
       this.camera,
@@ -233,6 +239,67 @@ export class Main {
     }
     this.renderer.render(this.scene, this.camera);
   }
+
+}
+//rotation: [-10, 0, 0], scale: [1, 1, 1], position: [3, 21, 20]
+var sun = new GLTFLoader();
+sun.load('resources/realSun.glb', function (gltf) {
+  var model = gltf.scene;
+  model.position.set(3, 21, 20); // Set position to (16,2,-18)
+  model.rotation.set(-10, 0, 0);
+  model.scale.set(1, 1, 1);
+  Main.scene.add(model);
+
+  // Create a bounding box for the model
+  model.traverse(function (child) {
+    if (child.isMesh) {
+      child.geometry.computeBoundingBox();
+      child.geometry.boundingBox.applyMatrix4(child.matrixWorld);
+    }
+  });
+
+  model.userData.boundingBox = new THREE.Box3().setFromObject(model);
+
+}, undefined, function (error) {
+  console.error(error);
+});
+{ // Grass spawner
+  var grassLoader = new GLTFLoader();
+
+function getRandomValue(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function createRandomGrass() {
+  grassLoader.load('resources/Enviroment/grass green.glb', function (gltf) {
+    var model = gltf.scene;
+    
+    // Random position
+    var x = getRandomValue(-40, 40);
+    var y = 0; // Assuming grass is on the ground, y can be 0
+    var z = getRandomValue(-40, 40);
+    model.position.set(x, y, z);
+    
+    // Random rotation
+    var rotationY = getRandomValue(-Math.PI, Math.PI);
+    model.rotation.set(0, rotationY, 0);
+    
+    // Random scale
+    var scale = getRandomValue(4, 4); // Grass typically varies less in size
+    model.scale.set(scale, scale, scale);
+    
+    model.castShadow = true;
+    model.receiveShadow = true;
+    Main.scene.add(model);
+  }, undefined, function (error) {
+    console.error(error);
+  });
+}
+
+// Create multiple random grass instances
+for (let i = 0; i < 200; i++) { // Adjust the number of grass instances as needed
+  createRandomGrass();
+}
 
 }
 
