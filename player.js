@@ -173,6 +173,9 @@ export class Player {
                 const envHitbox = new THREE.Box3().setFromObject(model, true);
                 model.userData.hitbox = envHitbox;;
 
+                // const boxHelper = new THREE.BoxHelper(model, 0xff0000);
+                // this.scene.add(boxHelper);
+
                 this.scene.add(model);
                 loadedObjects.push(model); // Keep track of loaded objects for overlap checking
             });
