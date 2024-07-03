@@ -19,13 +19,26 @@ class Main {
       canvas: canvasRef,
     });
 
+
+    const textureLoader = new THREE.TextureLoader();
+
+        // Load sky texture
+    textureLoader.setPath("../resources/");
+    const skyTexture = textureLoader.load("sky.jpg");
+    // skyTexture.wrapS = THREE.RepeatWrapping;
+    // skyTexture.wrapT = THREE.RepeatWrapping;
+
+    // Create sky dome
+    const skyMaterial = new THREE.MeshBasicMaterial({ map: skyTexture, side: THREE.BackSide });
+    const skyGeometry = new THREE.SphereGeometry(1000, 32, 32); // Large sphere to encompass scene
+    const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+    this.scene.add(sky);
+
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optionally change shadow map type for better quality
+    // this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optionally change shadow map type for better quality
 
     // Plane
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.setPath("../resources/");
     textureLoader.load(
       "grass.jpg",
       (texture) => {
@@ -263,6 +276,7 @@ class Main {
 }
 // enviroment renderering
 {
+    
     
 
     // Houses
