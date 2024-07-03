@@ -25,7 +25,7 @@ export class Player {
     loadModel() {
         var loader = new FBXLoader();
         loader.setPath("../resources/Castle Guard/");
-        loader.load("Joyful Jump.fbx", (fbx) => {
+        loader.load("Silly Dancing.fbx", (fbx) => {
             fbx.scale.setScalar(0.01);
             fbx.traverse(c => {
                 c.castShadow = true;
@@ -50,8 +50,8 @@ export class Player {
 
             var loader = new FBXLoader();
             loader.setPath("../resources/Castle Guard/");
-            loader.load('Joyful Jump.fbx', (fbx) => { onLoad('idle', fbx); });
-            loader.load('Joyful Jump.fbx', (fbx) => { onLoad('run', fbx); });
+            loader.load('Silly Dancing.fbx', (fbx) => { onLoad('idle', fbx); });
+            loader.load('Medium Run.fbx', (fbx) => { onLoad('run', fbx); });
         });
 
     }
