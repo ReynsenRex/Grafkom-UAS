@@ -25,7 +25,7 @@ export class Player {
     loadModel() {
         var loader = new FBXLoader();
         loader.setPath("../resources/Castle Guard/");
-        loader.load("Sad Idle.fbx", (fbx) => {
+        loader.load("Joyful Jump.fbx", (fbx) => {
             fbx.scale.setScalar(0.01);
             fbx.traverse(c => {
                 c.castShadow = true;
@@ -50,40 +50,8 @@ export class Player {
 
             var loader = new FBXLoader();
             loader.setPath("../resources/Castle Guard/");
-            loader.load('Sad Idle.fbx', (fbx) => { onLoad('idle', fbx); });
-            loader.load('Medium Run.fbx', (fbx) => { onLoad('run', fbx); });
-        });
-        
-        var npc = new FBXLoader();
-        npc.setPath("../resources/npc/");
-        npc.load("Dwarf Idle.fbx", (fbx) => {
-            fbx.scale.setScalar(0.01);
-            fbx.traverse(c => {
-                c.castShadow = true;
-            });
-            this.meshNpc = fbx;
-            this.scene.add(this.meshNpc);
-            this.meshNpc.rotation.y = Math.PI / 2;
-            this.targetRotation.y = Math.PI / 2;
-            this.meshNpc.position.x = 0;
-            this.meshNpc.position.z = 0;
-
-            this.boundingBox = new THREE.Box3().setFromObject(this.meshNpc);
-
-            this.mixerNpc = new THREE.AnimationMixer(this.meshNpc);
-            var onLoad = (animName, anim) => {
-                var clip = anim.animations[0];
-                var action = this.mixerNpc.clipAction(clip);
-
-                this.animations[animName] = {
-                    clip: clip,
-                    action: action
-                };
-            };
-
-            var loaderNpc = new FBXLoader();
-            loaderNpc.setPath("../resources/npc/");
-            loaderNpc.load('Dwarf Idle.fbx', (fbx) => { onLoad('idle', fbx); });
+            loader.load('Joyful Jump.fbx', (fbx) => { onLoad('idle', fbx); });
+            loader.load('Joyful Jump.fbx', (fbx) => { onLoad('run', fbx); });
         });
 
     }
@@ -181,6 +149,7 @@ export class Player {
             { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [2, 3, 13] },
             { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [5, 3, -9] },
             { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [-8, 3, -9] },
+            { path: 'npc/Witch.glb', rotation: [0, Math.PI / 2, 0], scale: [1.4, 1.4, 1.4], position: [0, 0, 0] },
             { path: '/realSun.glb', rotation: [-10, 0, 0], scale: [1, 1, 1], position: [3, 21, 20] },
         ];
         const loadedObjects = [];

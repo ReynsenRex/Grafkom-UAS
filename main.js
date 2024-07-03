@@ -79,8 +79,8 @@ export class Main {
     var ambient = new THREE.AmbientLight(0xffffff, 0.1);
 
     directionalLight.castShadow = true;
-    directionalLight.position.set(3, 19, 18);
-    pointlight.position.set(3, 20, 19);
+    directionalLight.position.set(3, 21, 1);
+    pointlight.position.set(3, 19, 1);
 
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
@@ -99,7 +99,7 @@ export class Main {
 
     var thirdPerson = new ThirdPersonCamera(
       this.camera,
-      new THREE.Vector3(-5, 5, 0),
+      new THREE.Vector3(-10, 5, 0),
       new THREE.Vector3(0, 0, 0)
     );
 
@@ -131,7 +131,7 @@ export class Main {
     this.moveRight = false;
     this.tiltRight = false;
     this.tiltLeft = false;
-    this.moveSpeed = 0.1;
+    this.moveSpeed = 0.05;
     this.rollSpeed = 0.01;
 
     // Event listeners for key down and up
