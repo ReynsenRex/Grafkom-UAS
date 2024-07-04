@@ -21,11 +21,11 @@ export class Player {
         }
         this.loadEnvironmentModels();  // Ensure this method is defined in this class
     }
-
+    
     loadModel() {
         var loader = new FBXLoader();
         loader.setPath("../resources/Castle Guard/");
-        loader.load("Silly Dancing.fbx", (fbx) => {
+        loader.load("Sad Idle.fbx", (fbx) => {
             fbx.scale.setScalar(0.01);
             fbx.traverse(c => {
                 c.castShadow = true;
@@ -50,7 +50,7 @@ export class Player {
 
             var loader = new FBXLoader();
             loader.setPath("../resources/Castle Guard/");
-            loader.load('Silly Dancing.fbx', (fbx) => { onLoad('idle', fbx); });
+            loader.load('Sad Idle.fbx', (fbx) => { onLoad('idle', fbx); });
             loader.load('Medium Run.fbx', (fbx) => { onLoad('run', fbx); });
         });
 
@@ -97,41 +97,7 @@ export class Player {
         });
     }
 
-    getRandomPosition(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    checkOverlap(position, objects, minDistance) {
-        for (const obj of objects) {
-            const distance = Math.sqrt(
-                Math.pow(position[0] - obj.position[0], 2) +
-                Math.pow(position[1] - obj.position[1], 2) +
-                Math.pow(position[2] - obj.position[2], 2)
-            );
-            if (distance < minDistance) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    getRandomNonOverlappingPosition(existingObjects, minDistance) {
-        let position;
-        let tries = 0;
-        const maxTries = 100; // Limit the number of tries to prevent infinite loops
-      
-        do {
-            position = [this.getRandomPosition(-30, 30), 0, this.getRandomPosition(-30, 30)];
-            tries++;
-        } while (this.checkOverlap(position, existingObjects, minDistance) && tries < maxTries);
-      
-        return position;
-    }
-
     loadEnvironmentModels() {
-        var x,z;
-        x = this.getRandomPosition(-100,100);
-        z = this.getRandomPosition(-100,100);
         const environmentObjects = [
             { path: 'Enviroment/Barracks.glb', rotation: [0, 31, 0], scale: [6, 6, 6], position: [20,0,-27] },
             { path: 'Enviroment/Cottage.glb', rotation: [0, Math.PI / 2, 0], scale: [15, 15, 15] , position: [-12,0,-21] },
@@ -149,7 +115,7 @@ export class Player {
             { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [2, 3, 13] },
             { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [5, 3, -9] },
             { path: 'Enviroment/Pine Tree.glb', rotation: [0, 0, 0], scale: [2, 2, 2], position: [-8, 3, -9] },
-            { path: 'npc/Witch.glb', rotation: [0, Math.PI / 2, 0], scale: [1.4, 1.4, 1.4], position: [0, 0, 0] },
+            { path: 'npc/Witch.glb', rotation: [0, 0, 0], scale: [1.4, 1.4, 1.4], position: [15, 0, -24] },
             { path: '/realSun.glb', rotation: [-10, 0, 0], scale: [1, 1, 1], position: [3, 21, 20] },
         ];
         const loadedObjects = [];
@@ -159,7 +125,6 @@ export class Player {
         environmentObjects.forEach((obj) => {
             loader.load(obj.path, (gltf) => {
                 const model = gltf.scene;
-                const position = this.getRandomNonOverlappingPosition(loadedObjects, 10); // Ensure objects do not overlap
                 
                 model.traverse((node) => {
                     if (node.isMesh) {

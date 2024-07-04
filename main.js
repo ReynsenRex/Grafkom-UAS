@@ -13,7 +13,6 @@ export class Main {
       0.1,
       5000
     );
-    this.scene.fog = new THREE.Fog(0x808080, 0, 100);
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: canvasRef,
@@ -76,10 +75,10 @@ export class Main {
     var directionalLight = new THREE.DirectionalLight(0xffffff);
     var directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight);
     var pointlight = new THREE.PointLight(0xffffff);
-    var ambient = new THREE.AmbientLight(0xffffff, 0.1);
+    var ambient = new THREE.AmbientLight(0xffffff, 0.2);
 
     directionalLight.castShadow = true;
-    directionalLight.position.set(3, 21, 1);
+    directionalLight.position.set(3, 21, 18);
     pointlight.position.set(3, 19, 1);
 
     directionalLight.shadow.mapSize.width = 2048;
@@ -93,8 +92,8 @@ export class Main {
     directionalLight.shadow.bias = -0.01;
 
     this.scene.add(directionalLight);
-    // this.scene.add(directionalLightHelper);
-    this.scene.add(pointlight);
+    this.scene.add(directionalLightHelper);
+    // this.scene.add(pointlight);
     this.scene.add(ambient);
 
     var thirdPerson = new ThirdPersonCamera(
@@ -131,7 +130,7 @@ export class Main {
     this.moveRight = false;
     this.tiltRight = false;
     this.tiltLeft = false;
-    this.moveSpeed = 0.05;
+    this.moveSpeed = 1;
     this.rollSpeed = 0.01;
 
     // Event listeners for key down and up
@@ -255,52 +254,57 @@ sun.load('resources/realSun.glb', function (gltf) {
 
   model.userData.boundingBox = new THREE.Box3().setFromObject(model);
 
+  // Add hemisphere light near the sun model
+  const hemiLight = new THREE.SpotLight(0xffffbb, 0x080820, 1);
+  hemiLight.position.set(3, 21, 20);
+  Main.scene.add(hemiLight);
+
 }, undefined, function (error) {
   console.error(error);
 });
+
 { // Grass spawner
   var grassLoader = new GLTFLoader();
 
-function getRandomValue(min, max) {
-  return Math.random() * (max - min) + min;
-}
+  function getRandomValue(min, max) {
+    return Math.random() * (max - min) + min;
+  }
 
-function createRandomGrass() {
-  grassLoader.load('resources/Enviroment/grass green.glb', function (gltf) {
-    var model = gltf.scene;
-    model.traverse((node) => {
-      if (node.isMesh) {
-          node.castShadow = true;
-          node.receiveShadow = true;
-      }
-  });
-    // Random position
-    var x = getRandomValue(-40, 40);
-    var y = 0; // Assuming grass is on the ground, y can be 0
-    var z = getRandomValue(-40, 40);
-    model.position.set(x, y, z);
-    
-    // Random rotation
-    var rotationY = getRandomValue(-Math.PI, Math.PI);
-    model.rotation.set(0, rotationY, 0);
-    
-    // Random scale
-    var scale = getRandomValue(4, 4); // Grass typically varies less in size
-    model.scale.set(scale, scale, scale);
-    
-    model.castShadow = true;
-    model.receiveShadow = true;
-    Main.scene.add(model);
-  }, undefined, function (error) {
-    console.error(error);
-  });
-}
+  function createRandomGrass() {
+    grassLoader.load('resources/Enviroment/grass green.glb', function (gltf) {
+      var model = gltf.scene;
+      model.traverse((node) => {
+        if (node.isMesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+        }
+    });
+      // Random position
+      var x = getRandomValue(-40, 40);
+      var y = 0; // Assuming grass is on the ground, y can be 0
+      var z = getRandomValue(-40, 40);
+      model.position.set(x, y, z);
+      
+      // Random rotation
+      var rotationY = getRandomValue(-Math.PI, Math.PI);
+      model.rotation.set(0, rotationY, 0);
+      
+      // Random scale
+      var scale = getRandomValue(4, 4); // Grass typically varies less in size
+      model.scale.set(scale, scale, scale);
+      
+      model.castShadow = true;
+      model.receiveShadow = true;
+      Main.scene.add(model);
+    }, undefined, function (error) {
+      console.error(error);
+    });
+  }
 
-// Create multiple random grass instances
-for (let i = 0; i < 100; i++) { // Adjust the number of grass instances as needed
-  createRandomGrass();
-}
-
+  // Create multiple random grass instances
+  for (let i = 0; i < 50; i++) { // Adjust the number of grass instances as needed
+    createRandomGrass();
+  }
 }
 
 Main.init();
